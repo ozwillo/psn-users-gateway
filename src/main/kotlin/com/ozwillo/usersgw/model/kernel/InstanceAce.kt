@@ -1,4 +1,4 @@
-package com.ozwillo.usersgw.model
+package com.ozwillo.usersgw.model.kernel
 
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field

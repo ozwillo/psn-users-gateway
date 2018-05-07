@@ -1,6 +1,6 @@
-package com.ozwillo.usersgw.repository
+package com.ozwillo.usersgw.repository.kernel
 
-import com.ozwillo.usersgw.model.User
+import com.ozwillo.usersgw.model.kernel.User
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.stereotype.Repository

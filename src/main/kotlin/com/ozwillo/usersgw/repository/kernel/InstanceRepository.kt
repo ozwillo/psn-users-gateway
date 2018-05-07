@@ -1,7 +1,7 @@
-package com.ozwillo.usersgw.repository
+package com.ozwillo.usersgw.repository.kernel
 
-import com.ozwillo.usersgw.model.Instance
-import com.ozwillo.usersgw.model.StatusType
+import com.ozwillo.usersgw.model.kernel.Instance
+import com.ozwillo.usersgw.model.kernel.StatusType
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
