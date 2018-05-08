@@ -4,6 +4,7 @@ import com.ozwillo.usersgw.config.EmagnusProperties
 import com.ozwillo.usersgw.model.local.InstanceUser
 import com.ozwillo.usersgw.repository.kernel.InstanceAceRepository
 import com.ozwillo.usersgw.repository.kernel.InstanceRepository
+import com.ozwillo.usersgw.repository.kernel.OrganizationRepository
 import com.ozwillo.usersgw.repository.kernel.UserRepository
 import com.ozwillo.usersgw.repository.local.InstanceUserRepository
 import org.slf4j.LoggerFactory
@@ -14,10 +15,12 @@ import org.springframework.stereotype.Service
 class EmagnusUserNotifierService(private val emagnusProperties: EmagnusProperties,
                                  private val instanceRepository: InstanceRepository,
                                  private val instanceAceRepository: InstanceAceRepository,
-                                 private val userRepository: UserRepository,
+                                 private val organizationRepository: OrganizationRepository,
                                  private val instanceUserRepository: InstanceUserRepository) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    private val organizationNameCache: MutableMap<String, String> = mutableMapOf()
 
     // TODO : find a way to set the rate from the config
     //@Scheduled(fixedRate = "#{emagnusProperties.rate}")
@@ -33,6 +36,7 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
             val usersIdsToDelete = provisionedUsersIds.minus(instanceUsersIds)
             logger.debug("Gonna create $usersIdsToCreate")
             usersIdsToCreate.forEach { userId ->
+                val organizationName = getOrganizationName(instance.providerId)
                 // TODO : retrieve user info
                 // TODO : PUT eMagnus
                 instanceUserRepository.save(InstanceUser(instance.ozwilloId, userId))
@@ -42,6 +46,18 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
                 // TODO : DELETE eMagnus
                 instanceUserRepository.remove(InstanceUser(instance.ozwilloId, userId))
             }
+        }
+    }
+
+    private fun getOrganizationName(organizationId: String): String {
+        return if (organizationNameCache.containsKey(organizationId)) {
+            logger.debug("Returning cached value for organization $organizationId")
+            organizationNameCache[organizationId]!!
+        } else {
+            val organizationName = organizationRepository.findByOzwilloId(organizationId)?.name ?: ""
+            logger.debug("Caching value $organizationName for $organizationId")
+            organizationNameCache[organizationId] = organizationName
+            organizationName
         }
     }
 }
