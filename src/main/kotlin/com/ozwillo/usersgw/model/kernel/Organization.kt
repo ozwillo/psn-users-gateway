@@ -1,12 +1,13 @@
 package com.ozwillo.usersgw.model.kernel
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
-import java.util.*
 
 @Document(collection = "organization")
 data class Organization(
         @Field("id")
-        val ozwilloId: String = UUID.randomUUID().toString(),
+        @JsonProperty("id")
+        val ozwilloId: String,
         val name: String
 )

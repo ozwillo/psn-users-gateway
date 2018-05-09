@@ -7,5 +7,7 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties("application.emagnus")
 class EmagnusProperties {
     lateinit var applicationId: String
+    lateinit var baseUrl: String
+    lateinit var path: String
     var rate: Long = 5000
 }
