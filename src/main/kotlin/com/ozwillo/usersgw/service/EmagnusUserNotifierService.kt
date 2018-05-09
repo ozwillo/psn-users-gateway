@@ -4,6 +4,7 @@ import com.ozwillo.usersgw.config.EmagnusProperties
 import com.ozwillo.usersgw.config.ProvisioningRequestInterceptor
 import com.ozwillo.usersgw.config.RequestResponseLoggingInterceptor
 import com.ozwillo.usersgw.model.emagnus.EmagnusUser
+import com.ozwillo.usersgw.model.kernel.Instance
 import com.ozwillo.usersgw.model.kernel.Organization
 import com.ozwillo.usersgw.model.local.InstanceUser
 import com.ozwillo.usersgw.repository.kernel.InstanceAceRepository
@@ -47,21 +48,26 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
             val usersIdsToDelete = provisionedUsersIds.minus(instanceUsersIds)
             logger.debug("Gonna create $usersIdsToCreate")
             usersIdsToCreate.forEach { userId ->
-                val organizationName = getOrganizationName(instance.providerId)
-                // we can safely assume an user referenced on an instance is really existing
-                val user = userRepository.findByOzwilloId(userId)!!
-                val emagnusUser = EmagnusUser(instance.ozwilloId, instance.ozwilloId,
-                        Organization(instance.providerId, organizationName), user)
+                val emagnusUser = composeEmagnusUser(instance, userId)
                 logger.debug("emagnus user is $emagnusUser")
-                if (createUser(emagnusUser))
+                if (callEmagnus(emagnusUser))
                     instanceUserRepository.save(InstanceUser(instance.ozwilloId, userId))
             }
             logger.debug("Gonna delete $usersIdsToDelete")
             usersIdsToDelete.forEach { userId ->
-                // TODO : DELETE eMagnus
-                instanceUserRepository.remove(InstanceUser(instance.ozwilloId, userId))
+                val emagnusUser = composeEmagnusUser(instance, userId)
+                if (callEmagnus(emagnusUser, HttpMethod.DELETE))
+                    instanceUserRepository.remove(InstanceUser(instance.ozwilloId, userId))
             }
         }
+    }
+
+    private fun composeEmagnusUser(instance: Instance, userId: String): EmagnusUser {
+        val organizationName = getOrganizationName(instance.providerId)
+        // we can safely assume an user referenced on an instance is really existing
+        val user = userRepository.findByOzwilloId(userId)!!
+        return EmagnusUser(instance.ozwilloId, instance.ozwilloId,
+                Organization(instance.providerId, organizationName), user)
     }
 
     private fun getOrganizationName(organizationId: String): String {
@@ -76,7 +82,7 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
         }
     }
 
-    fun createUser(emagnusUser: EmagnusUser): Boolean {
+    fun callEmagnus(emagnusUser: EmagnusUser, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
         val restTemplate = RestTemplate()
         restTemplate.interceptors.add(ProvisioningRequestInterceptor(emagnusProperties))
         restTemplate.interceptors.add(RequestResponseLoggingInterceptor())
@@ -85,7 +91,7 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
         headers[HttpHeaders.CONTENT_TYPE] = "application/json;charset=UTF-8"
         return try {
             restTemplate.exchange("${emagnusProperties.baseUrl}/${emagnusProperties.path}/${emagnusUser.user.ozwilloId}",
-                    HttpMethod.POST, HttpEntity(emagnusUser, headers), Void::class.java)
+                    httpMethod, HttpEntity(emagnusUser, headers), Void::class.java)
             true
         } catch (e: RestClientException) {
             logger.error("Unable to create user ${emagnusUser.user.ozwilloId} ($e)")
