@@ -13,6 +13,7 @@ import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import java.util.*
 
 
@@ -59,6 +60,7 @@ class EmagnusUserNotifierServiceTest {
         Assert.assertTrue(result)
 
         verify(postRequestedFor(urlEqualTo("/factory/users/$userOzwilloId"))
-                .withRequestBody(equalToJson(emagnusUserJson)))
+                .withRequestBody(equalToJson(emagnusUserJson))
+                .withHeader(HttpHeaders.CONTENT_TYPE, equalTo("application/json;charset=UTF-8")))
     }
 }

@@ -11,9 +11,12 @@ import com.ozwillo.usersgw.repository.kernel.UserRepository
 import com.ozwillo.usersgw.repository.local.InstanceUserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
@@ -74,9 +77,12 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
 
     fun createUser(emagnusUser: EmagnusUser): Boolean {
         val restTemplate = RestTemplate()
+        val headers = LinkedMultiValueMap<String, String>()
+        headers[HttpHeaders.ACCEPT] = "application/json, application/*+json"
+        headers[HttpHeaders.CONTENT_TYPE] = "application/json;charset=UTF-8"
         return try {
             restTemplate.exchange("${emagnusProperties.baseUrl}/${emagnusProperties.path}/${emagnusUser.user.ozwilloId}",
-                    HttpMethod.POST, HttpEntity(emagnusUser), Void::class.java)
+                    HttpMethod.POST, HttpEntity(emagnusUser, headers), Void::class.java)
             true
         } catch (e: RestClientException) {
             logger.error("Unable to create user ${emagnusUser.user.ozwilloId} ($e)")
