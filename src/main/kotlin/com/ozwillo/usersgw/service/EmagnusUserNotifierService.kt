@@ -1,6 +1,8 @@
 package com.ozwillo.usersgw.service
 
 import com.ozwillo.usersgw.config.EmagnusProperties
+import com.ozwillo.usersgw.config.ProvisioningRequestInterceptor
+import com.ozwillo.usersgw.config.RequestResponseLoggingInterceptor
 import com.ozwillo.usersgw.model.emagnus.EmagnusUser
 import com.ozwillo.usersgw.model.kernel.Organization
 import com.ozwillo.usersgw.model.local.InstanceUser
@@ -16,7 +18,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
@@ -77,6 +78,8 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
 
     fun createUser(emagnusUser: EmagnusUser): Boolean {
         val restTemplate = RestTemplate()
+        restTemplate.interceptors.add(ProvisioningRequestInterceptor(emagnusProperties))
+        restTemplate.interceptors.add(RequestResponseLoggingInterceptor())
         val headers = LinkedMultiValueMap<String, String>()
         headers[HttpHeaders.ACCEPT] = "application/json, application/*+json"
         headers[HttpHeaders.CONTENT_TYPE] = "application/json;charset=UTF-8"

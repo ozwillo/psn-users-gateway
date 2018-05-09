@@ -61,6 +61,7 @@ class EmagnusUserNotifierServiceTest {
 
         verify(postRequestedFor(urlEqualTo("/factory/users/$userOzwilloId"))
                 .withRequestBody(equalToJson(emagnusUserJson))
-                .withHeader(HttpHeaders.CONTENT_TYPE, equalTo("application/json;charset=UTF-8")))
+                .withHeader(HttpHeaders.CONTENT_TYPE, equalTo("application/json;charset=UTF-8"))
+                .withHeader("X-Hub-Signature", matching("sha1=69ece45ffe656ef85f3e0622bfd1da2fe97e3125")))
     }
 }

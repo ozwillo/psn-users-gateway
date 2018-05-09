@@ -9,5 +9,6 @@ class EmagnusProperties {
     lateinit var applicationId: String
     lateinit var baseUrl: String
     lateinit var path: String
+    lateinit var provisioningSecret: String
     var rate: Long = 5000
 }
