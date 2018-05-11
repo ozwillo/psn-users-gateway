@@ -56,3 +56,9 @@ dependencies {
 	testCompile('org.springframework.security:spring-security-test')
 	testCompile('com.github.tomakehurst:wiremock-standalone:2.17.0')
 }
+
+bootJar {
+	launchScript {
+		properties 'initInfoProvides' : 'ozwillo-users-gateway'
+	}
+}
