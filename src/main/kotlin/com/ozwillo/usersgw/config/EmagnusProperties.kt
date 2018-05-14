@@ -10,5 +10,6 @@ class EmagnusProperties {
     lateinit var baseUrl: String
     lateinit var path: String
     lateinit var provisioningSecret: String
+    var enabled: Boolean = false
     var rate: Long = 5000
 }

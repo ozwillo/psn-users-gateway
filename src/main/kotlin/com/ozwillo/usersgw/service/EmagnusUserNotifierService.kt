@@ -38,6 +38,11 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
     //@Scheduled(fixedRate = "#{emagnusProperties.rate}")
     @Scheduled(fixedRate = 5000)
     fun notifyChanges() {
+        if (!emagnusProperties.enabled) {
+            logger.debug("Emagnus user notifier is disabled, returning")
+            return
+        }
+
         logger.debug("Starting the notification process")
         instanceRepository.findByApplication(emagnusProperties.applicationId).forEach { instance ->
             logger.debug("Found instance ${instance.ozwilloId}")
