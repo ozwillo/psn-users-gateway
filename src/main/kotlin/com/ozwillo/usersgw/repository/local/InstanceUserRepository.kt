@@ -18,5 +18,9 @@ class InstanceUserRepository(@Qualifier(value = "local") private val template: M
 
     fun save(instanceUser: InstanceUser) = template.save(instanceUser)
 
-    fun remove(instanceUser: InstanceUser) = template.remove(instanceUser)
+    fun remove(instanceUser: InstanceUser) {
+        val criteria = Criteria.where("instance_id").`is`(instanceUser.instanceId)
+                .and("user_id").`is`(instanceUser.userId)
+        template.remove(Query(criteria), InstanceUser::class.java)
+    }
 }
