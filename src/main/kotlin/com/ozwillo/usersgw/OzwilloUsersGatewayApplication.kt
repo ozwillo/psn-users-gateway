@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 @SpringBootApplication
 @EnableScheduling
@@ -40,9 +42,15 @@ class OzwilloUsersGatewayApplication(private val kernelProperties: KernelPropert
             MongoTemplate(MongoClient(serverAddress), mongodbProperties.databaseName)
         }
     }
+	
+    @Bean
+    fun defaultPasswordEncoder(): PasswordEncoder {        
+        return BCryptPasswordEncoder()
+    }
 }
 
 fun main(args: Array<String>) {
     runApplication<OzwilloUsersGatewayApplication>(*args)
 }
+
 
