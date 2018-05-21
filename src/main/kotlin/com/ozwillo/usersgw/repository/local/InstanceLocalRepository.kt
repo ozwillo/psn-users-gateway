@@ -14,6 +14,11 @@ class InstanceLocalRepository(@Qualifier(value = "local") private val template: 
     fun findAll(): List<Instance> {
         return template.findAll(Instance::class.java)	
     }
+	
+	fun findByInstance(instanceId: String): Instance? {
+        val criteria = Criteria.where("instance_id").`is`(instanceId)
+        return template.findOne(Query(criteria), Instance::class.java)	
+    }
 
     fun save(instance: Instance) = template.save(instance)
 

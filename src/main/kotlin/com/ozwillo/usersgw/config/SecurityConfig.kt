@@ -8,27 +8,27 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.password.PasswordEncoder
 
 
-@Configuration //Make this as a configuration class
-@EnableWebSecurity //Turn on Web Security
-class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder) : WebSecurityConfigurerAdapter(){
-    override fun configure(http: HttpSecurity) {
-        http
-                .authorizeRequests()
-                    .anyRequest()
-                    .authenticated()
-                .and()
-                    .httpBasic()
-                .and()
-		            .csrf().disable()
-    }
- 
-    override fun configure(auth: AuthenticationManagerBuilder) {
-        auth
-                .inMemoryAuthentication()
-                    .withUser("admin")
-                    .password(passwordEncoder.encode("admin"))
-                    .roles("USER", "ADMIN")
-    }
-	
+@Configuration
+@EnableWebSecurity
+class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder) : WebSecurityConfigurerAdapter() {
+	override fun configure(http: HttpSecurity) {
+		http
+				.authorizeRequests()
+				.anyRequest()
+				.authenticated()
+				.and()
+				.httpBasic()
+				.and()
+				.csrf().disable()
+	}
+
+	override fun configure(auth: AuthenticationManagerBuilder) {
+		auth
+				.inMemoryAuthentication()
+				.withUser("admin")
+				.password(passwordEncoder.encode("admin"))
+				.roles("USER", "ADMIN")
+	}
+
 
 }

@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties("application.userinvitation")
 class UserInvitationProperties {
     lateinit var kernelUrl: String
-	lateinit var refreshToken: String	
-    var enabled: Boolean = false
-    var rate: Long = 5000
+	lateinit var refreshToken: String
+	lateinit var portalCredential: String
+    var enabled: Boolean = true
+    lateinit var rate: String 
 }
