@@ -45,7 +45,7 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
 
 			val createdUsers = userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED)
 			createdUsers.forEach({ user ->
-				if (inviteUser(instance.instanceId, MembershipRequest(user.email, instance.instanceId))) {
+				if (inviteUser(instance.instanceId, instance.organizationId, MembershipRequest(user.email, instance.instanceId))) {
 					val updatedUser = user.copy(status = Status.PENDING)
 					userInvitationRepository.save(updatedUser)
 				}
@@ -92,14 +92,17 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
 		return headers
 	}
 
-	fun inviteUser(instance_id: String, membershipRequest: MembershipRequest, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
+	fun inviteUser(instance_id: String, organisationId: String, membershipRequest: MembershipRequest, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
 
 		val headers = createHeaders()
 		return try {
+			restTemplate.exchange("${userInvitationProperties.kernelUrl}/d/memberships/org/${organisationId}", 
+			        httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
 			restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/${instance_id}",
 					httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
 			true
 		} catch (e: RestClientException) {
+			logger.error(e.getLocalizedMessage())
 			logger.error("Unable to create invite ${membershipRequest.email} on instance : ${instance_id}")
 			false
 		}

@@ -22,8 +22,7 @@ class UserGatewayControler(private val userInvitationRepository: UserInvitationR
 		val instance: Instance?
 		val instanceFind = instanceRepository.findByInstance(request.ozwilloInstanceInfo.instanceId)
 		if (instanceFind != null) {
-			instance = instanceFind.copy(organizationId= "theupdate")
-			instanceRepository.save(instance)
+			instance = instanceFind
 		} else {
 			instance = Instance(request.ozwilloInstanceInfo.organizationId, request.ozwilloInstanceInfo.instanceId, request.ozwilloInstanceInfo.creatorId, request.ozwilloInstanceInfo.serviceId)
 			instanceRepository.save(instance)
