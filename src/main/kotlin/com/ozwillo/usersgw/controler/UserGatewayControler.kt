@@ -14,25 +14,25 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/usersgw")
 class UserGatewayControler(private val userInvitationRepository: UserInvitationRepository,
-						   private val instanceRepository: InstanceLocalRepository) {
+                           private val instanceRepository: InstanceLocalRepository) {
 
-	@PostMapping
-	fun createUser(@RequestBody request: UserGatewayRequest): Instance? {
+    @PostMapping
+    fun createUser(@RequestBody request: UserGatewayRequest): Instance? {
 
-		val instance: Instance?
-		val instanceFind = instanceRepository.findByInstance(request.ozwilloInstanceInfo.instanceId)
-		if (instanceFind != null) {
-			instance = instanceFind
-		} else {
-			instance = Instance(request.ozwilloInstanceInfo.organizationId, request.ozwilloInstanceInfo.instanceId, request.ozwilloInstanceInfo.creatorId, request.ozwilloInstanceInfo.serviceId)
-			instanceRepository.save(instance)
-		}
+        val instance: Instance?
+        val instanceFind = instanceRepository.findByInstance(request.ozwilloInstanceInfo.instanceId)
+        if (instanceFind != null) {
+            instance = instanceFind
+        } else {
+            instance = Instance(request.ozwilloInstanceInfo.organizationId, request.ozwilloInstanceInfo.instanceId, request.ozwilloInstanceInfo.creatorId, request.ozwilloInstanceInfo.serviceId)
+            instanceRepository.save(instance)
+        }
 
-		request.emails.forEach { email ->
-			if (userInvitationRepository.findByInstanceAndEmail(request.ozwilloInstanceInfo.instanceId, email) == null)
-				userInvitationRepository.save(UserInvitation(request.ozwilloInstanceInfo.instanceId, email))
-		}
-		return instance
-	}
+        request.emails.forEach { email ->
+            if (userInvitationRepository.findByInstanceAndEmail(request.ozwilloInstanceInfo.instanceId, email) == null)
+                userInvitationRepository.save(UserInvitation(request.ozwilloInstanceInfo.instanceId, email))
+        }
+        return instance
+    }
 
 }

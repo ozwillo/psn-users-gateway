@@ -42,7 +42,7 @@ class OzwilloUsersGatewayApplication(private val kernelProperties: KernelPropert
             MongoTemplate(MongoClient(serverAddress), mongodbProperties.databaseName)
         }
     }
-	
+    
     @Bean
     fun defaultPasswordEncoder(): PasswordEncoder {        
         return BCryptPasswordEncoder()

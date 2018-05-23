@@ -11,24 +11,24 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @Configuration
 @EnableWebSecurity
 class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder) : WebSecurityConfigurerAdapter() {
-	override fun configure(http: HttpSecurity) {
-		http
-				.authorizeRequests()
-				.anyRequest()
-				.authenticated()
-				.and()
-				.httpBasic()
-				.and()
-				.csrf().disable()
-	}
+    override fun configure(http: HttpSecurity) {
+        http
+                .authorizeRequests()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .httpBasic()
+                .and()
+                .csrf().disable()
+    }
 
-	override fun configure(auth: AuthenticationManagerBuilder) {
-		auth
-				.inMemoryAuthentication()
-				.withUser("admin")
-				.password(passwordEncoder.encode("admin"))
-				.roles("USER", "ADMIN")
-	}
+    override fun configure(auth: AuthenticationManagerBuilder) {
+        auth
+                .inMemoryAuthentication()
+                .withUser("admin")
+                .password(passwordEncoder.encode("admin"))
+                .roles("USER", "ADMIN")
+    }
 
 
 }

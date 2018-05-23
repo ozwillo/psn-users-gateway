@@ -13,16 +13,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserInvitationRepository(@Qualifier(value = "local") private val template: MongoTemplate) {
 
-	fun findByInstanceAndStatus(instanceId: String, status: Status): List<UserInvitation> {
-		val criteria = Criteria.where("instance_id").`is`(instanceId).and("status").`is`(status)
-		return template.find(Query(criteria), UserInvitation::class.java)
-	}
+    fun findByInstanceAndStatus(instanceId: String, status: Status): List<UserInvitation> {
+        val criteria = Criteria.where("instance_id").`is`(instanceId).and("status").`is`(status)
+        return template.find(Query(criteria), UserInvitation::class.java)
+    }
 
-	fun findByInstanceAndEmail(instanceId: String, email: String): UserInvitation? {
+    fun findByInstanceAndEmail(instanceId: String, email: String): UserInvitation? {
         val criteria = Criteria.where("instance_id").`is`(instanceId).and("email").`is`(email)
         return template.findOne(Query(criteria), UserInvitation::class.java)	
     }
 
-	fun save(userInvitation: UserInvitation) = template.save(userInvitation)
+    fun save(userInvitation: UserInvitation) = template.save(userInvitation)
 
 }

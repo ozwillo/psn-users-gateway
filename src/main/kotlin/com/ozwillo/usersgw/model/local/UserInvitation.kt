@@ -7,16 +7,16 @@ import org.springframework.data.annotation.Id
 
 @Document(collection = "user_invitation")
 data class UserInvitation(
-		@Field("instance_id") val instanceId: String,
-		@Field("email") val email: String,
-		@Field("user_id") val userId: String = "",
-		@Field("status") val status: Status = Status.CREATED,
-		@Id var _id: ObjectId = ObjectId.get()
+        @Field("instance_id") val instanceId: String,
+        @Field("email") val email: String,
+        @Field("user_id") val userId: String = "",
+        @Field("status") val status: Status = Status.CREATED,
+        @Id var _id: ObjectId = ObjectId.get()
 )
 
 enum class Status {
-	CREATED,
+    CREATED,
     PENDING,
     ACCEPTED,
-	PUSHED
+    PUSHED
 }
