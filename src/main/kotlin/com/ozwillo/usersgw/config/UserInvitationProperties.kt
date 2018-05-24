@@ -9,6 +9,8 @@ class UserInvitationProperties {
     lateinit var kernelUrl: String
     lateinit var refreshToken: String
     lateinit var portalCredential: String
+    lateinit var username: String
+    lateinit var password: String
     var enabled: Boolean = true
     lateinit var rate: String 
 }

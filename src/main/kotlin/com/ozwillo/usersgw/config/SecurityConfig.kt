@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 
 @Configuration
 @EnableWebSecurity
-class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder) : WebSecurityConfigurerAdapter() {
+class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder, private val userInvitationProperties :UserInvitationProperties) : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
                 .authorizeRequests()
@@ -21,12 +21,12 @@ class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder) : Web
                 .and()
                 .csrf().disable()
     }
-
+ 
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth
                 .inMemoryAuthentication()
-                .withUser("admin")
-                .password(passwordEncoder.encode("admin"))
+                .withUser(userInvitationProperties.username)
+                .password(passwordEncoder.encode(userInvitationProperties.password))
                 .roles("USER", "ADMIN")
     }
 
