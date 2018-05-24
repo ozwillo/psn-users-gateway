@@ -13,7 +13,7 @@ class InstanceUserRepository(@Qualifier(value = "local") private val template: M
 
     fun findByInstance(instanceId: String): List<InstanceUser> {
         val criteria = Criteria.where("instance_id").`is`(instanceId)
-        return template.find(Query(criteria))
+        return template.find(Query(criteria), InstanceUser::class.java)	
     }
 
     fun save(instanceUser: InstanceUser) = template.save(instanceUser)
