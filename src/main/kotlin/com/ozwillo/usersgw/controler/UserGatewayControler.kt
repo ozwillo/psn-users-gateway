@@ -1,4 +1,4 @@
-package com.ozwillo.usersgw.service
+package com.ozwillo.usersgw.controler
 
 import com.ozwillo.usersgw.model.local.UserGatewayRequest
 import com.ozwillo.usersgw.model.local.UserInvitation
@@ -14,18 +14,18 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/usersgw")
 class UserGatewayControler(private val userInvitationRepository: UserInvitationRepository,
-                           private val instanceRepository: InstanceLocalRepository) {
+                           private val instanceLocalRepository: InstanceLocalRepository) {
 
     @PostMapping
     fun createUser(@RequestBody request: UserGatewayRequest): Instance? {
 
         val instance: Instance?
-        val instanceFind = instanceRepository.findByInstance(request.ozwilloInstanceInfo.instanceId)
+        val instanceFind = instanceLocalRepository.findByInstance(request.ozwilloInstanceInfo.instanceId)
         if (instanceFind != null) {
             instance = instanceFind
         } else {
             instance = Instance(request.ozwilloInstanceInfo.organizationId, request.ozwilloInstanceInfo.instanceId, request.ozwilloInstanceInfo.creatorId, request.ozwilloInstanceInfo.serviceId)
-            instanceRepository.save(instance)
+            instanceLocalRepository.save(instance)
         }
 
         request.emails.forEach { email ->
@@ -34,5 +34,4 @@ class UserGatewayControler(private val userInvitationRepository: UserInvitationR
         }
         return instance
     }
-
 }

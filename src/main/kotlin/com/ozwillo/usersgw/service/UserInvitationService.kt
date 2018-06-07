@@ -18,7 +18,6 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import com.ozwillo.usersgw.model.local.Status
 import java.util.Base64
-import com.ozwillo.usersgw.config.RequestResponseLoggingInterceptor
 
 import org.springframework.scheduling.annotation.Scheduled
 
@@ -29,8 +28,6 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    private val organizationNameCache: MutableMap<String, String> = mutableMapOf()
-
     val restTemplate = RestTemplate()
 
     @Scheduled(fixedRate = 5000)
@@ -40,11 +37,9 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
             return
         }
 
-        val instances = instanceLocalRepository.findAll()
-        instances.forEach { instance ->
+        instanceLocalRepository.findAll().forEach { instance ->
 
-            val createdUsers = userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED)
-            createdUsers.forEach({ user ->
+            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED).forEach({ user ->
                 if (inviteUser(instance.instanceId, instance.organizationId, MembershipRequest(user.email, instance.instanceId))) {
                     val updatedUser = user.copy(status = Status.PENDING)
                     userInvitationRepository.save(updatedUser)
@@ -52,25 +47,22 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
             })
 
             val pendingUsers = userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.PENDING)
-            val ozwUsers = instanceUsers(instance.instanceId);
+            val ozwUsers = instanceUsers(instance.instanceId)
             pendingUsers.forEach({ user ->
-                val ozwUser = ozwUsers!!.stream().filter() { ace -> ace.user_email_address.equals(user.email) }.findFirst()
-                if (ozwUser.isPresent()) {
-                    val updatedUser = user.copy(status = Status.ACCEPTED, userId = ozwUser.get().user_id)
+                val ozwUser = ozwUsers?.find { ace -> ace.user_email_address == user.email }
+                if (ozwUser != null) {
+                    val updatedUser = user.copy(status = Status.ACCEPTED, userId = ozwUser.user_id)
                     userInvitationRepository.save(updatedUser)
                 }
             })
 
-            val acceptedUsers = userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.ACCEPTED)
-            acceptedUsers.forEach({ user ->
+            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.ACCEPTED).forEach({ user ->
                 if (pushToDashBoard(instance.serviceId, UserSubscription("", instance.serviceId, user.userId, instance.creatorId))) {
                     val updatedUser = user.copy(status = Status.PUSHED)
                     userInvitationRepository.save(updatedUser)
                 }
             })
         }
-
-
     }
 
     fun createHeaders(): LinkedMultiValueMap<String, String> {
@@ -87,7 +79,7 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
                 HttpMethod.POST, HttpEntity(form, headersLogin), TokenResponse::class.java)
         val headers = LinkedMultiValueMap<String, String>()
         headers[HttpHeaders.ACCEPT] = "application/json, application/*+json"
-        headers[HttpHeaders.AUTHORIZATION] = "Bearer ${token?.getBody()?.access_token}"
+        headers[HttpHeaders.AUTHORIZATION] = "Bearer ${token.body?.access_token}"
 
         return headers
     }
@@ -96,14 +88,14 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
 
         val headers = createHeaders()
         return try {
-            restTemplate.exchange("${userInvitationProperties.kernelUrl}/d/memberships/org/${organisationId}", 
+            restTemplate.exchange("${userInvitationProperties.kernelUrl}/d/memberships/org/$organisationId",
                     httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
-            restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/${instance_id}",
+            restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
                     httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
             true
         } catch (e: RestClientException) {
-            logger.error(e.getLocalizedMessage())
-            logger.error("Unable to create invite ${membershipRequest.email} on instance : ${instance_id}")
+            logger.error(e.localizedMessage)
+            logger.error("Unable to create invite ${membershipRequest.email} on instance : $instance_id")
             false
         }
     }
@@ -111,17 +103,15 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
     fun instanceUsers(instance_id: String, httpMethod: HttpMethod = HttpMethod.GET): List<ACE>? {
 
         val headers = createHeaders()
-
-        return restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/${instance_id}",
-                httpMethod, HttpEntity(null, headers), Array<ACE>::class.java)?.getBody()?.toList()
-
+        return restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
+                httpMethod, HttpEntity(null, headers), Array<ACE>::class.java).body?.toList()
     }
 
     fun pushToDashBoard(serviceId: String, userSubcribtion: UserSubscription, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
 
         val headers = createHeaders()
         return try {
-            restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/subscriptions/service/${serviceId}",
+            restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/subscriptions/service/$serviceId",
                     httpMethod, HttpEntity(userSubcribtion, headers), Void::class.java)
             true
         } catch (e: RestClientException) {

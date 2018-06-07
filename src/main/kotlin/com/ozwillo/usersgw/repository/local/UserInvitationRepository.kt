@@ -5,7 +5,6 @@ import com.ozwillo.usersgw.model.local.Status
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
