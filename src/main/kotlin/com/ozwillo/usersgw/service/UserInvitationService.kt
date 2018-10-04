@@ -17,9 +17,11 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import com.ozwillo.usersgw.model.local.Status
+import org.springframework.http.HttpStatus
 import java.util.Base64
 
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.web.client.HttpClientErrorException
 
 @Service
 class UserInvitationService(private val userInvitationProperties: UserInvitationProperties,
@@ -37,35 +39,44 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
             return
         }
 
+        // get the access token once for the following API calls to the Kernel
+        val accessToken = getAccessToken()
+        if (accessToken.isNullOrEmpty()) {
+            logger.error("Unable to get an access token, giving up")
+            return
+        }
+
         instanceLocalRepository.findAll().forEach { instance ->
 
-            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED).forEach({ user ->
-                if (inviteUser(instance.instanceId, instance.organizationId, MembershipRequest(user.email, instance.instanceId))) {
+            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED).forEach { user ->
+                if (inviteUser(instance.instanceId, instance.organizationId,
+                                MembershipRequest(user.email, instance.instanceId), accessToken!!)) {
                     val updatedUser = user.copy(status = Status.PENDING)
                     userInvitationRepository.save(updatedUser)
                 }
-            })
+            }
 
             val pendingUsers = userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.PENDING)
-            val ozwUsers = instanceUsers(instance.instanceId)
-            pendingUsers.forEach({ user ->
+            val ozwUsers = instanceUsers(instance.instanceId, accessToken!!)
+            pendingUsers.forEach { user ->
                 val ozwUser = ozwUsers?.find { ace -> ace.user_email_address == user.email }
                 if (ozwUser != null) {
                     val updatedUser = user.copy(status = Status.ACCEPTED, userId = ozwUser.user_id)
                     userInvitationRepository.save(updatedUser)
                 }
-            })
+            }
 
-            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.ACCEPTED).forEach({ user ->
-                if (pushToDashBoard(instance.serviceId, UserSubscription("", instance.serviceId, user.userId, instance.creatorId))) {
+            userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.ACCEPTED).forEach { user ->
+                if (pushToDashBoard(instance.serviceId,
+                                UserSubscription("", instance.serviceId, user.userId, instance.creatorId), accessToken)) {
                     val updatedUser = user.copy(status = Status.PUSHED)
                     userInvitationRepository.save(updatedUser)
                 }
-            })
+            }
         }
     }
 
-    fun createHeaders(): LinkedMultiValueMap<String, String> {
+    fun getAccessToken(): String? {
         val headersLogin = LinkedMultiValueMap<String, String>()
         headersLogin[HttpHeaders.CONTENT_TYPE] = "application/x-www-form-urlencoded"
         headersLogin[HttpHeaders.ACCEPT] = "application/json, application/*+json"
@@ -77,21 +88,27 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
         form["refresh_token"] = userInvitationProperties.refreshToken
         val token = restTemplate.exchange("${userInvitationProperties.kernelUrl}/a/token",
                 HttpMethod.POST, HttpEntity(form, headersLogin), TokenResponse::class.java)
+
+        return token.body?.access_token
+    }
+
+    fun headersForToken(accessToken: String): LinkedMultiValueMap<String, String> {
         val headers = LinkedMultiValueMap<String, String>()
         headers[HttpHeaders.ACCEPT] = "application/json, application/*+json"
-        headers[HttpHeaders.AUTHORIZATION] = "Bearer ${token.body?.access_token}"
+        headers[HttpHeaders.AUTHORIZATION] = "Bearer $accessToken"
 
         return headers
     }
 
-    fun inviteUser(instance_id: String, organisationId: String, membershipRequest: MembershipRequest, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
+    fun inviteUser(instance_id: String, organisationId: String, membershipRequest: MembershipRequest,
+                   accessToken: String): Boolean {
 
-        val headers = createHeaders()
+        val headers = headersForToken(accessToken)
         return try {
             restTemplate.exchange("${userInvitationProperties.kernelUrl}/d/memberships/org/$organisationId",
-                    httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
+                    HttpMethod.POST, HttpEntity(membershipRequest, headers), Void::class.java)
             restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
-                    httpMethod, HttpEntity(membershipRequest, headers), Void::class.java)
+                    HttpMethod.POST, HttpEntity(membershipRequest, headers), Void::class.java)
             true
         } catch (e: RestClientException) {
             logger.error(e.localizedMessage)
@@ -100,23 +117,28 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
         }
     }
 
-    fun instanceUsers(instance_id: String, httpMethod: HttpMethod = HttpMethod.GET): List<ACE>? {
+    fun instanceUsers(instance_id: String, accessToken: String): List<ACE>? {
 
-        val headers = createHeaders()
+        val headers = headersForToken(accessToken)
         return restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
-                httpMethod, HttpEntity(null, headers), Array<ACE>::class.java).body?.toList()
+                HttpMethod.GET, HttpEntity(null, headers), Array<ACE>::class.java).body?.toList()
     }
 
-    fun pushToDashBoard(serviceId: String, userSubcribtion: UserSubscription, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
+    fun pushToDashBoard(serviceId: String, userSubcribtion: UserSubscription, accessToken: String): Boolean {
 
-        val headers = createHeaders()
+        val headers = headersForToken(accessToken)
         return try {
             restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/subscriptions/service/$serviceId",
-                    httpMethod, HttpEntity(userSubcribtion, headers), Void::class.java)
+                    HttpMethod.POST, HttpEntity(userSubcribtion, headers), Void::class.java)
             true
-        } catch (e: RestClientException) {
-            logger.error("Unable to push to dasboard user_id: ${userSubcribtion.user_id} ")
-            false
+        } catch (e: HttpClientErrorException) {
+            if (e.statusCode == HttpStatus.CONFLICT) {
+                logger.debug("Conflict while pushing subscription for ${userSubcribtion.user_id}, ignoring")
+                true
+            } else {
+                logger.error("Unable to push to dasboard user_id: ${userSubcribtion.user_id} ")
+                false
+            }
         }
     }
 }
