@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 class SecurityWebInitializer(private val passwordEncoder: PasswordEncoder, private val userInvitationProperties :UserInvitationProperties) : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
+                .antMatcher("/api/usersgw")
                 .authorizeRequests()
                 .anyRequest()
                 .authenticated()
