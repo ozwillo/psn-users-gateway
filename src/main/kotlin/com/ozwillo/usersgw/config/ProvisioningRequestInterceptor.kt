@@ -6,10 +6,10 @@ import org.springframework.http.client.ClientHttpRequestExecution
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
 
-class ProvisioningRequestInterceptor(private val emagnusProperties: EmagnusProperties) : ClientHttpRequestInterceptor {
+class ProvisioningRequestInterceptor(private val secret: String) : ClientHttpRequestInterceptor {
 
     override fun intercept(request: HttpRequest, body: ByteArray, execution: ClientHttpRequestExecution): ClientHttpResponse {
-        val signature = CryptoUtil.calculateSignature(emagnusProperties.provisioningSecret, body)
+        val signature = CryptoUtil.calculateSignature(secret, body)
         request.headers.set("X-Hub-Signature", "sha1=$signature")
 
         return execution.execute(request, body)

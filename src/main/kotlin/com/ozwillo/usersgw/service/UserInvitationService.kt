@@ -17,6 +17,7 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import com.ozwillo.usersgw.model.local.Status
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import java.util.Base64
 
@@ -26,11 +27,10 @@ import org.springframework.web.client.HttpClientErrorException
 @Service
 class UserInvitationService(private val userInvitationProperties: UserInvitationProperties,
                             private val instanceLocalRepository: InstanceLocalRepository,
-                            private val userInvitationRepository: UserInvitationRepository) {
+                            private val userInvitationRepository: UserInvitationRepository,
+                            @Qualifier(value = "kernelRestTemplate") private val restTemplate: RestTemplate) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    val restTemplate = RestTemplate()
 
     @Scheduled(fixedRate = 5000)
     fun invitationJob() {

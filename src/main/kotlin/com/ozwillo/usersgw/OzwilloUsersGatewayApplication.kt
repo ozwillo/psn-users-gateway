@@ -6,6 +6,7 @@ import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
 import com.ozwillo.usersgw.config.KernelProperties
 import com.ozwillo.usersgw.config.MongodbProperties
+import com.ozwillo.usersgw.config.RequestResponseLoggingInterceptor
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -14,6 +15,10 @@ import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.web.client.RestTemplate
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
+
+
 
 @SpringBootApplication
 @EnableScheduling
@@ -46,6 +51,25 @@ class OzwilloUsersGatewayApplication(private val kernelProperties: KernelPropert
     @Bean
     fun defaultPasswordEncoder(): PasswordEncoder {        
         return BCryptPasswordEncoder()
+    }
+
+    @Bean("provisioningRestTemplate")
+    fun provisioningRestTemplate(): RestTemplate {
+        val timeout = 5000
+        val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory()
+        clientHttpRequestFactory.setConnectTimeout(timeout)
+        val restTemplate = RestTemplate(clientHttpRequestFactory)
+        restTemplate.interceptors.add(RequestResponseLoggingInterceptor())
+
+        return restTemplate
+    }
+
+    @Bean("kernelRestTemplate")
+    fun kernelRestTemplate(): RestTemplate {
+        val timeout = 5000
+        val clientHttpRequestFactory = HttpComponentsClientHttpRequestFactory()
+        clientHttpRequestFactory.setConnectTimeout(timeout)
+        return RestTemplate(clientHttpRequestFactory)
     }
 }
 

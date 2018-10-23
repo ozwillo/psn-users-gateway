@@ -2,7 +2,6 @@ package com.ozwillo.usersgw.service
 
 import com.ozwillo.usersgw.config.EmagnusProperties
 import com.ozwillo.usersgw.config.ProvisioningRequestInterceptor
-import com.ozwillo.usersgw.config.RequestResponseLoggingInterceptor
 import com.ozwillo.usersgw.model.emagnus.EmagnusUser
 import com.ozwillo.usersgw.model.kernel.Instance
 import com.ozwillo.usersgw.model.kernel.Organization
@@ -13,6 +12,7 @@ import com.ozwillo.usersgw.repository.kernel.OrganizationRepository
 import com.ozwillo.usersgw.repository.kernel.UserRepository
 import com.ozwillo.usersgw.repository.local.InstanceUserRepository
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -28,7 +28,8 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
                                  private val instanceAceRepository: InstanceAceRepository,
                                  private val organizationRepository: OrganizationRepository,
                                  private val instanceUserRepository: InstanceUserRepository,
-                                 private val userRepository: UserRepository) {
+                                 private val userRepository: UserRepository,
+                                 @Qualifier(value = "provisioningRestTemplate") private val restTemplate: RestTemplate) {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -88,9 +89,7 @@ class EmagnusUserNotifierService(private val emagnusProperties: EmagnusPropertie
     }
 
     fun callEmagnus(emagnusUser: EmagnusUser, httpMethod: HttpMethod = HttpMethod.POST): Boolean {
-        val restTemplate = RestTemplate()
-        restTemplate.interceptors.add(ProvisioningRequestInterceptor(emagnusProperties))
-        restTemplate.interceptors.add(RequestResponseLoggingInterceptor())
+        restTemplate.interceptors.add(ProvisioningRequestInterceptor(emagnusProperties.provisioningSecret))
         val headers = LinkedMultiValueMap<String, String>()
         headers[HttpHeaders.ACCEPT] = "application/json, application/*+json"
         headers[HttpHeaders.CONTENT_TYPE] = "application/json;charset=UTF-8"
