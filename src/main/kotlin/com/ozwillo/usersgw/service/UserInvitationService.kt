@@ -104,11 +104,19 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
                    accessToken: String): Boolean {
 
         val headers = headersForToken(accessToken)
-        return try {
+        try {
             restTemplate.exchange("${userInvitationProperties.kernelUrl}/d/memberships/org/$organisationId",
                     HttpMethod.POST, HttpEntity(membershipRequest, headers), Void::class.java)
+        } catch (e: HttpClientErrorException) {
+            logger.error("Received error ${e.localizedMessage} when inviting ${membershipRequest.email} in organization : $organisationId")
+            // Conflict errors are not a problem, that just means the user is already a member of the organization
+            if (e.statusCode != HttpStatus.CONFLICT)
+                return false
+        }
+
+        return try {
             restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
-                    HttpMethod.POST, HttpEntity(membershipRequest, headers), Void::class.java)
+                HttpMethod.POST, HttpEntity(membershipRequest, headers), Void::class.java)
             true
         } catch (e: RestClientException) {
             logger.error(e.localizedMessage)
