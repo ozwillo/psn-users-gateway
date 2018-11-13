@@ -1,7 +1,7 @@
 buildscript {
 	ext {
-		kotlinVersion = '1.2.51'
-		springBootVersion = '2.0.6.RELEASE'
+		kotlinVersion = '1.2.70'
+		springBootVersion = '2.1.0.RELEASE'
 	}
 	repositories {
 		mavenCentral()
@@ -41,6 +41,7 @@ repositories {
 
 
 dependencies {
+	compileOnly('org.springframework.boot:spring-boot-configuration-processor')
 	compile("org.springframework.boot:spring-boot-starter")
 	compile('org.springframework.boot:spring-boot-starter-actuator')
 	compile('org.springframework.boot:spring-boot-starter-data-mongodb')

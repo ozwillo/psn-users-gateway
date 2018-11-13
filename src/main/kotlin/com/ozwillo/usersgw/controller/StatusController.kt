@@ -1,4 +1,4 @@
-package com.ozwillo.usersgw.controler
+package com.ozwillo.usersgw.controller
 
 import org.springframework.web.bind.annotation.*
 

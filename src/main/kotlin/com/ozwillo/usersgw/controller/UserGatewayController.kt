@@ -1,4 +1,4 @@
-package com.ozwillo.usersgw.controler
+package com.ozwillo.usersgw.controller
 
 import com.ozwillo.usersgw.model.local.UserGatewayRequest
 import com.ozwillo.usersgw.model.local.UserInvitation
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/usersgw")
-class UserGatewayControler(private val userInvitationRepository: UserInvitationRepository,
-                           private val instanceLocalRepository: InstanceLocalRepository) {
+class UserGatewayController(private val userInvitationRepository: UserInvitationRepository,
+                            private val instanceLocalRepository: InstanceLocalRepository) {
 
     @PostMapping
     fun createUser(@RequestBody request: UserGatewayRequest): Instance? {

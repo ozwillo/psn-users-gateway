@@ -1,0 +1,35 @@
+application.providers:
+  emagnus:
+    applicationId: 123456-1111-2222-987654
+    baseUrl: http://localhost:8089
+    path: /factory/users
+    provisioningSecret: 1234567890
+    enabled: false
+  aklabox:
+    applicationId: 987654-2222-1111-123456
+    baseUrl: http://localhost:8089
+    path: /factory/users
+    provisioningSecret: 1234567890
+    enabled: false
+
+application.kernel.databaseName: oasis
+application.kernel.host: 127.0.0.1
+application.kernel.userName: oasis
+application.kernel.authDatabase: oasis
+application.kernel.password: password
+
+application.mongodb.databaseName: usersgw-test
+application.mongodb.host: 172.17.151.2
+application.mongodb.userName: 
+application.mongodb.authDatabase: 
+application.mongodb.password: 
+
+application.userinvitation.kernelUrl: https://kernel.sictiam.fr
+application.userinvitation.refreshToken: refreshToken
+application.userinvitation.portalCredential: portal:secret
+application.userinvitation.enabled: true
+application.userinvitation.rate: 5000
+application.userinvitation.username: admin
+application.userinvitation.password: password
+
+logging.level.com.ozwillo.usersgw: DEBUG
