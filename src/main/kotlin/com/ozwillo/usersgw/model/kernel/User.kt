@@ -19,7 +19,6 @@ data class User(
         @Field("email_address")
         @JsonProperty("email_address")
         val emailAddress: String,
-        val nickname: String,
         @Field("family_name")
         @JsonProperty("family_name")
         val familyName: String?,
