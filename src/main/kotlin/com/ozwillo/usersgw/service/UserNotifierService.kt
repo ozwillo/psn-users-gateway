@@ -16,10 +16,11 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.web.client.RestClientException
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 
 @Service
@@ -101,9 +102,14 @@ class UserNotifierService(private val providersConfig: ProvidersConfig,
             restTemplate.exchange("${providerProperties.baseUrl}/${providerProperties.path}/${providerUser.user.ozwilloId}",
                     httpMethod, HttpEntity(providerUser, headers), Void::class.java)
             true
-        } catch (e: RestClientException) {
-            logger.error("Unable to create user ${providerUser.user.ozwilloId} ($e)")
-            false
+        } catch (e: HttpClientErrorException) {
+            if (e.statusCode == HttpStatus.CONFLICT) {
+                logger.debug("Users ${providerUser.user.emailAddress} already exists, ignoring")
+                true
+            } else {
+                logger.error("Unable to create user ${providerUser.user.emailAddress} in ${providerProperties.applicationId}")
+                false
+            }
         }
     }
 }
