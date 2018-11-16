@@ -28,6 +28,6 @@ application.userinvitation.kernelUrl: https://kernel.sictiam.fr
 application.userinvitation.refreshToken: refreshToken
 application.userinvitation.portalCredential: portal:secret
 application.userinvitation.enabled: true
-application.userinvitation.rate: 5000
+application.userinvitation.rate: 60000
 application.userinvitation.username: admin
 application.userinvitation.password: password
