@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestTemplate
 
 @Service
@@ -36,7 +37,7 @@ class UserNotifierService(private val providersConfig: ProvidersConfig,
 
     private val organizationNameCache: MutableMap<String, String> = mutableMapOf()
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 60000)
     fun notifyChanges() {
         logger.debug("Starting the notification process")
 
@@ -110,6 +111,9 @@ class UserNotifierService(private val providersConfig: ProvidersConfig,
                 logger.error("Unable to create user ${providerUser.user.emailAddress} in ${providerProperties.applicationId}")
                 false
             }
+        } catch (e500: HttpServerErrorException) {
+            logger.error("500 when creating user ${providerUser.user.emailAddress} in ${providerProperties.applicationId}")
+            false
         }
     }
 }
