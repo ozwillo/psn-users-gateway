@@ -1,16 +1,11 @@
-application.providers:
-  emagnus:
-    applicationId: 123456-1111-2222-987654
-    baseUrl: http://localhost
-    path: /factory/users
-    provisioningSecret: 1234567890
-    enabled: false
-  aklabox:
-    applicationId: 987654-2222-1111-123456
-    baseUrl: http://localhost
-    path: /factory/users
-    provisioningSecret: 1234567890
-    enabled: true
+#application.providers:
+# Sample entry for a provider declaration
+#  appname:
+#    applicationId: 123456-1111-2222-987654
+#    baseUrl: http://localhost
+#    path: /factory/users
+#    provisioningSecret: 1234567890
+#    enabled: false
 
 application.kernel.databaseName: oasis
 application.kernel.host: 10.28.9.6
