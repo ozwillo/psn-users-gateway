@@ -2,10 +2,11 @@ package com.ozwillo.usersgw.service
 
 import com.ozwillo.usersgw.config.ProvidersConfig
 import com.ozwillo.usersgw.config.ProvisioningRequestInterceptor
-import com.ozwillo.usersgw.model.provider.ProviderUser
 import com.ozwillo.usersgw.model.kernel.Instance
 import com.ozwillo.usersgw.model.kernel.Organization
+import com.ozwillo.usersgw.model.kernel.StatusType
 import com.ozwillo.usersgw.model.local.InstanceUser
+import com.ozwillo.usersgw.model.provider.ProviderUser
 import com.ozwillo.usersgw.repository.kernel.InstanceAceRepository
 import com.ozwillo.usersgw.repository.kernel.InstanceRepository
 import com.ozwillo.usersgw.repository.kernel.OrganizationRepository
@@ -50,28 +51,30 @@ class UserNotifierService(private val providersConfig: ProvidersConfig,
 
             logger.debug("Looking at $name")
 
-            instanceRepository.findByApplication(providerProperties.applicationId).forEach { instance ->
-                logger.debug("Found instance ${instance.ozwilloId}")
-                val instanceUsers = instanceAceRepository.findByInstance(instance.ozwilloId)
-                val instanceUsersIds = instanceUsers.map { instanceAce -> instanceAce.userId }
-                val provisionedUsersIds = instanceUserRepository.findByInstance(instance.ozwilloId)
-                    .map { instanceUser -> instanceUser.userId }
-                val usersIdsToCreate = instanceUsersIds.minus(provisionedUsersIds)
-                val usersIdsToDelete = provisionedUsersIds.minus(instanceUsersIds)
-                logger.debug("Gonna create $usersIdsToCreate")
-                usersIdsToCreate.forEach { userId ->
-                    val providerUser = composeProviderUser(instance, userId)
-                    logger.debug("User is $providerUser")
-                    if (callProvider(providerUser, providerProperties))
-                        instanceUserRepository.save(InstanceUser(instance.ozwilloId, userId))
+            instanceRepository.findByApplication(providerProperties.applicationId)
+                .filter { instance -> instance.status == StatusType.RUNNING }
+                .forEach { instance ->
+                    logger.debug("Found instance ${instance.ozwilloId}")
+                    val instanceUsers = instanceAceRepository.findByInstance(instance.ozwilloId)
+                    val instanceUsersIds = instanceUsers.map { instanceAce -> instanceAce.userId }
+                    val provisionedUsersIds = instanceUserRepository.findByInstance(instance.ozwilloId)
+                        .map { instanceUser -> instanceUser.userId }
+                    val usersIdsToCreate = instanceUsersIds.minus(provisionedUsersIds)
+                    val usersIdsToDelete = provisionedUsersIds.minus(instanceUsersIds)
+                    logger.debug("Gonna create $usersIdsToCreate")
+                    usersIdsToCreate.forEach { userId ->
+                        val providerUser = composeProviderUser(instance, userId)
+                        logger.debug("User is $providerUser")
+                        if (callProvider(providerUser, providerProperties))
+                            instanceUserRepository.save(InstanceUser(instance.ozwilloId, userId))
+                    }
+                    logger.debug("Gonna delete $usersIdsToDelete")
+                    usersIdsToDelete.forEach { userId ->
+                        val providerUser = composeProviderUser(instance, userId)
+                        if (callProvider(providerUser, providerProperties, HttpMethod.DELETE))
+                            instanceUserRepository.remove(InstanceUser(instance.ozwilloId, userId))
+                    }
                 }
-                logger.debug("Gonna delete $usersIdsToDelete")
-                usersIdsToDelete.forEach { userId ->
-                    val providerUser = composeProviderUser(instance, userId)
-                    if (callProvider(providerUser, providerProperties, HttpMethod.DELETE))
-                        instanceUserRepository.remove(InstanceUser(instance.ozwilloId, userId))
-                }
-            }
         }
     }
 
