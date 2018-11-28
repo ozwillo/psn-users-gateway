@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpServerErrorException
+import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 
 @Service
@@ -103,16 +104,19 @@ class UserNotifierService(private val providersConfig: ProvidersConfig,
             restTemplate.exchange("${providerProperties.baseUrl}/${providerProperties.path}/${providerUser.user.ozwilloId}",
                     httpMethod, HttpEntity(providerUser, headers), Void::class.java)
             true
-        } catch (e: HttpClientErrorException) {
-            if (e.statusCode == HttpStatus.CONFLICT) {
+        } catch (e4xx: HttpClientErrorException) {
+            if (e4xx.statusCode == HttpStatus.CONFLICT) {
                 logger.debug("Users ${providerUser.user.emailAddress} already exists, ignoring")
                 true
             } else {
                 logger.error("Unable to create user ${providerUser.user.emailAddress} in ${providerProperties.applicationId}")
                 false
             }
-        } catch (e500: HttpServerErrorException) {
+        } catch (e5xx: HttpServerErrorException) {
             logger.error("500 when creating user ${providerUser.user.emailAddress} in ${providerProperties.applicationId}")
+            false
+        } catch (e: RestClientException) {
+            logger.error("Unexpected REST client exception ${e.message}")
             false
         }
     }
