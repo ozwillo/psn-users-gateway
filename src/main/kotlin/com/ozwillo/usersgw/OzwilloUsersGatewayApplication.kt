@@ -27,11 +27,15 @@ class OzwilloUsersGatewayApplication(private val kernelProperties: KernelPropert
 
     @Bean("kernel")
     fun mongoKernelTemplate(): MongoTemplate {
-        val mongoCredential = MongoCredential.createCredential(kernelProperties.userName,
-                kernelProperties.authDatabase, kernelProperties.password.toCharArray())
         val serverAddress = ServerAddress(kernelProperties.host)
-        val mongoClientOptions = MongoClientOptions.builder().build()
-        return MongoTemplate(MongoClient(serverAddress, mongoCredential, mongoClientOptions), kernelProperties.databaseName)
+        return if (!kernelProperties.authDatabase.isEmpty()) {
+            val mongoCredential = MongoCredential.createCredential(kernelProperties.userName,
+                kernelProperties.authDatabase, kernelProperties.password.toCharArray())
+            val mongoClientOptions = MongoClientOptions.builder().build()
+            MongoTemplate(MongoClient(serverAddress, mongoCredential, mongoClientOptions), kernelProperties.databaseName)
+        } else {
+            MongoTemplate(MongoClient(serverAddress), kernelProperties.databaseName)
+        }
     }
 
     @Bean("local")
