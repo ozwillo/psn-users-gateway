@@ -60,6 +60,10 @@ dependencies {
 	testCompile('com.github.tomakehurst:wiremock-standalone:2.17.0')
 }
 
+bootRun {
+	environment SPRING_PROFILES_ACTIVE: environment.SPRING_PROFILES_ACTIVE ?: "dev"
+}
+
 bootJar {
 	launchScript {
 		properties 'initInfoProvides' : 'ozwillo-users-gateway'
