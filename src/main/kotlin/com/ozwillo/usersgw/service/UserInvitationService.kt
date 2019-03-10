@@ -49,6 +49,7 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
         instanceLocalRepository.findAll().forEach { instance ->
 
             userInvitationRepository.findByInstanceAndStatus(instance.instanceId, Status.CREATED).forEach { user ->
+                logger.debug("Looking at ${user.email} for ${instance.instanceId}")
                 if (inviteUser(instance.instanceId, instance.organizationId,
                                 MembershipRequest(user.email, instance.instanceId), accessToken!!)) {
                     val updatedUser = user.copy(status = Status.PENDING)
@@ -128,8 +129,13 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
     fun instanceUsers(instance_id: String, accessToken: String): List<ACE>? {
 
         val headers = headersForToken(accessToken)
-        return restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
+        return try {
+            restTemplate.exchange("${userInvitationProperties.kernelUrl}/apps/acl/instance/$instance_id",
                 HttpMethod.GET, HttpEntity(null, headers), Array<ACE>::class.java).body?.toList()
+        } catch (e: HttpClientErrorException) {
+            logger.error("Unable to retrieve ACLs for $instance_id (${e.statusCode} - ${e.message})")
+            emptyList()
+        }
     }
 
     fun pushToDashBoard(serviceId: String, userSubcribtion: UserSubscription, accessToken: String): Boolean {
