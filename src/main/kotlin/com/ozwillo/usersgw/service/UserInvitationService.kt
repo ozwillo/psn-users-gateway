@@ -32,7 +32,7 @@ class UserInvitationService(private val userInvitationProperties: UserInvitation
 
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 60000)
     fun invitationJob() {
         if (!userInvitationProperties.enabled) {
             logger.debug("Invitation job is disabled, returning")
