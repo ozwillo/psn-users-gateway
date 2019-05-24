@@ -26,3 +26,7 @@ application.userinvitation.enabled: true
 application.userinvitation.rate: 60000
 application.userinvitation.username: admin
 application.userinvitation.password: password
+
+management.endpoints.enabled-by-default: false
+management.endpoints.web.exposure.include: health
+management.endpoint.health.enabled: true
